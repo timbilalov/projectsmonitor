@@ -1,0 +1,42 @@
+{% load staticfiles %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'styles/style.css' %}" />
+
+
+{% if all_sites %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название проекта</th>
+                <th>Dev URL</th>
+                <th>Prod URL</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for site in all_sites %}
+                <tr>
+                    <td>{{ site.id }}</td>
+                    <td><a href="/sites/{{ site.id }}/">{{ site.caption|default:"Без названия" }}</a></td>
+                    <td>
+                        {% if site.dev_url %}
+                            <a href="{{ site.dev_url }}" target="_blank" rel="nofollow">{{ site.dev_url }}</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if site.prod_url %}
+                            <a href="{{ site.prod_url }}" target="_blank" rel="nofollow">{{ site.prod_url }}</a>
+                        {% endif %}
+                    </td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+{% else %}
+    <p>No sites are available.</p>
+{% endif %}

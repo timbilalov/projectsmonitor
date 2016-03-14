@@ -1,3 +1,24 @@
 li a {
     color: green;
 }
+
+
+
+table {
+    table-layout: auto;
+    width: 100%;
+    border-collapse: collapse;
+    border: none;
+}
+
+table td,
+table th {
+    border: 1px solid #888;
+    text-align: left;
+    padding: 0.3rem 0.5rem;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+}
