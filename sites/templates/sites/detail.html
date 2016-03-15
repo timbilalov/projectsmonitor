@@ -2,12 +2,14 @@
 
 <link rel="stylesheet" type="text/css" href="{% static 'styles/style.css' %}" />
 
-{{ site }}
+{{ report_data }}
 
-<!-- {{ site.id }}
 <br/>
-{{ site.caption }}
 <br/>
-{{ site.dev_url }}
+{{ report_data.site_object.id }}
 <br/>
-{{ site.prod_url }} -->
+{{ report_data.site_object.caption }}
+<br/>
+{{ report_data.site_object.dev_url }}
+<br/>
+{{ report_data.site_object.prod_url }}
