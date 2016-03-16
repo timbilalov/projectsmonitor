@@ -66,11 +66,16 @@ class DetailView(generic.DetailView):
             "prod": site.prod_url
         }
 
+        ## Callback function invoked when header data is ready
+        def header(buf):
+            import sys
+            sys.stdout.write(buf)
+            # Returning None implies that all bytes were written
+
         for env in urls_to_check:
             s = urls_to_check[env]
-
             url = urlparse(s)
-            rep_data_env = {}
+
             if not hostname_resolves(url.netloc):
                 rep_data_env["not_resolves"] = True
 
@@ -78,10 +83,35 @@ class DetailView(generic.DetailView):
             c = pycurl.Curl()
             c.setopt(c.URL, s)
             c.setopt(c.WRITEDATA, buffer)
+            c.setopt(c.FOLLOWLOCATION, 1)
+            c.perform()
+
+            url_effective = c.getinfo(c.EFFECTIVE_URL)
+            if urls_to_check[env] != url_effective:
+                report_data[env + "_effective_url"] = url_effective
+
+        urls_to_check = {
+            "dev": report_data.get("dev_effective_url") or site.dev_url,
+            "prod": report_data.get("prod_effective_url") or site.prod_url
+        }
+
+        for env in urls_to_check:
+            s = urls_to_check[env]
+
+            url = urlparse(s)
+            rep_data_env = {}
+
+            buffer = BytesIO()
+            c = pycurl.Curl()
+            c.setopt(c.URL, s)
+            c.setopt(c.WRITEDATA, buffer)
+            c.setopt(c.FOLLOWLOCATION, 1)
+            # c.setopt(c.HEADERFUNCTION, header)
             c.perform()
 
             resp_code = c.getinfo(c.RESPONSE_CODE)
             rep_data_env["response_code"] = resp_code
+            rep_data_env["ip"] = c.getinfo(c.PRIMARY_IP)
 
             if resp_code == 200:
                 buffer = BytesIO()
@@ -101,6 +131,15 @@ class DetailView(generic.DetailView):
             c.close()
 
             report_data[env] = rep_data_env
+
+        # TODO check if site on external server
+        in_production = report_data["dev"]["ip"] == report_data["prod"]["ip"]
+        report_data["in_production"] = in_production
+
+        if not in_production and report_data["dev"].get("found_disallow"):
+            report_data["status_code"] = 1
+        else:
+            report_data["status_code"] = "null"
 
         return report_data
 
