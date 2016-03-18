@@ -132,14 +132,27 @@ class DetailView(generic.DetailView):
 
             report_data[env] = rep_data_env
 
-        # TODO check if site on external server
-        in_production = report_data["dev"]["ip"] == report_data["prod"]["ip"]
+        in_production = report_data.get("dev")["ip"] == report_data.get("prod")["ip"]
+        if not in_production and site.moved_to_external == True:
+            in_production = True
         report_data["in_production"] = in_production
 
-        if not in_production and report_data["dev"].get("found_disallow"):
-            report_data["status_code"] = 1
+        if in_production:
+            report_data["status_code"] = "production"
+
         else:
-            report_data["status_code"] = "null"
+            r_txt_resp = report_data["dev"].get("robots_txt_response_code")
+            if r_txt_resp == 404:
+                report_data["status_code"] = 3
+
+            elif r_txt_resp == 200:
+                if report_data["dev"].get("found_disallow"):
+                    report_data["status_code"] = 1
+                else:
+                    report_data["status_code"] = 2
+
+            else:
+                report_data["status_code"] = "asdasd2134"
 
         return report_data
 
