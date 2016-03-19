@@ -97,6 +97,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+DEFAULT_CHARSET = "utf-8"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
