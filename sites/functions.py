@@ -44,7 +44,7 @@ def get_status_text(status_num):
 
         6: {
             "level": "good",
-            "text": "Сайт сдан и открыт для индексации."
+            "text": "Сайт сдан и открыт для индексации, dev площадка закрыта."
         },
 
         7: {
@@ -55,6 +55,21 @@ def get_status_text(status_num):
         8: {
             "level": "warning",
             "text": "Сайт сдан, но dev_url редиректит хрен пойми куда."
+        },
+
+        9: {
+            "level": "warning",
+            "text": "Сайт в разработке, но dev площадка почему-то закрыта."
+        },
+
+        10: {
+            "level": "warning",
+            "text": "Сайт типа сдан, но prod_url редиректит хрен пойми куда."
+        },
+
+        11: {
+            "level": "info",
+            "text": "Сайт игнорируется при проверке."
         }
     }
 
@@ -91,6 +106,12 @@ def get_report_data(site):
     # return self.pk_url_kwarg
     # return site
     report_data["site_object"] = site
+
+    if site.ignored:
+        report_data["status_code"] = 11
+        report_data["status_level"] = get_status_text(report_data["status_code"]).get("level")
+        report_data["status_text"] = get_status_text(report_data["status_code"]).get("text")
+        return report_data
 
     s = site.dev_url
     urls_to_check = {
@@ -183,47 +204,69 @@ def get_report_data(site):
     if report_data.get("dev_effective_url"):
         parsed_uri = urlparse(report_data["dev_effective_url"])
         domain1 = '{uri.netloc}'.format(uri=parsed_uri)
+        domain1 = re.sub(r"^www\.", "", domain1)
         parsed_uri = urlparse(site.dev_url)
         domain2 = '{uri.netloc}'.format(uri=parsed_uri)
+        domain2 = re.sub(r"^www\.", "", domain2)
         # dev_redirect_external = report_data["dev_effective_url_ip"] != report_data["dev"]["ip"]
         dev_redirect_external = domain1 != domain2
     else:
         dev_redirect_external = False
+
+    if report_data.get("prod_effective_url"):
+        parsed_uri = urlparse(report_data["prod_effective_url"])
+        domain1 = '{uri.netloc}'.format(uri=parsed_uri)
+        domain1 = re.sub(r"^www\.", "", domain1)
+        parsed_uri = urlparse(site.prod_url)
+        domain2 = '{uri.netloc}'.format(uri=parsed_uri)
+        domain2 = re.sub(r"^www\.", "", domain2)
+        prod_redirect_external = domain1 != domain2
+    else:
+        prod_redirect_external = False
+
     report_data["dev_redirect_external"] = dev_redirect_external
+    report_data["prod_redirect_external"] = prod_redirect_external
 
     if in_production:
-
-        if r_txt_resp_prod == 404:
-            report_data["status_code"] = 4
-
-        elif r_txt_resp_prod == 200:
-            if report_data["prod"].get("found_disallow"):
-                report_data["status_code"] = 5
-            else:
-                if dev_redirect_external:
-                    report_data["status_code"] = 8
-
-                else:
-                    if dev_closed:
-                        report_data["status_code"] = 6
-                    else:
-                        report_data["status_code"] = 7
+        if prod_redirect_external:
+            report_data["status_code"] = 10
 
         else:
-            report_data["status_code"] = 0
+            if r_txt_resp_prod == 404:
+                report_data["status_code"] = 4
+
+            elif r_txt_resp_prod == 200:
+                if report_data["prod"].get("found_disallow"):
+                    report_data["status_code"] = 5
+                else:
+                    if dev_redirect_external:
+                        report_data["status_code"] = 8
+
+                    else:
+                        if dev_closed:
+                            report_data["status_code"] = 6
+                        else:
+                            report_data["status_code"] = 7
+
+            else:
+                report_data["status_code"] = 0
 
     else:
-        if r_txt_resp_dev == 404:
-            report_data["status_code"] = 3
-
-        elif r_txt_resp_dev == 200:
-            if report_data["dev"].get("found_disallow"):
-                report_data["status_code"] = 1
-            else:
-                report_data["status_code"] = 2
+        if dev_closed:
+            report_data["status_code"] = 9
 
         else:
-            report_data["status_code"] = 0
+            if r_txt_resp_dev == 404:
+                report_data["status_code"] = 3
+
+            elif r_txt_resp_dev == 200:
+                if report_data["dev"].get("found_disallow"):
+                    report_data["status_code"] = 1
+                else:
+                    report_data["status_code"] = 2
+
+            else:
+                report_data["status_code"] = 0
 
     # global get_status_text
     report_data["status_level"] = get_status_text(report_data["status_code"]).get("level")

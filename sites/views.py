@@ -22,7 +22,16 @@ class IndexView(generic.ListView):
         Return the last five published questions (not including those set to be
         published in the future).
         """
-        return Site.objects.all()
+        all_sites = Site.objects.all()
+        res_array = []
+        for site in all_sites:
+            site_report_data = get_report_data(site)
+            res_array.append({
+                "site_object": site,
+                "report_data": site_report_data
+            })
+
+        return res_array
         # return Site.objects.filter(
         #     pub_date__lte=timezone.now()
         # ).order_by('-pub_date')[:5]

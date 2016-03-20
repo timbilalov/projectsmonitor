@@ -1,7 +1,6 @@
 {% load staticfiles %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'styles/style.css' %}" />
-
+<link rel="stylesheet" type="text/css" href="{% static 'sites/styles/style.css' %}" />
 
 {% if all_sites %}
     <table>
@@ -17,20 +16,25 @@
 
         <tbody>
             {% for site in all_sites %}
-                <tr>
-                    <td>{{ site.id }}</td>
-                    <td><a href="/sites/{{ site.id }}/">{{ site.caption|default:"Без названия" }}</a></td>
+                <tr class="{{ site.report_data.status_level }}">
+                    <td>{{ site.site_object.id }}</td>
+                    <td><a href="/sites/{{ site.site_object.id }}/">{{ site.site_object.caption|default:"Без названия" }}</a></td>
                     <td>
-                        {% if site.dev_url %}
-                            <a href="{{ site.dev_url }}" target="_blank" rel="nofollow">{{ site.dev_url }}</a>
+                        {% if site.site_object.dev_url %}
+                            <a href="{{ site.site_object.dev_url }}" target="_blank" rel="nofollow">{{ site.site_object.dev_url }}</a>
                         {% endif %}
                     </td>
                     <td>
-                        {% if site.prod_url %}
-                            <a href="{{ site.prod_url }}" target="_blank" rel="nofollow">{{ site.prod_url }}</a>
+                        {% if site.site_object.prod_url %}
+                            <a href="{{ site.site_object.prod_url }}" target="_blank" rel="nofollow">{{ site.site_object.prod_url }}</a>
+                            {% if site.site_object.moved_to_external %}
+                                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAf0lEQVQYV2NkwA/+w6QZCSg0A8pvAWJ+kMK9QOyEpOEUkG0OxCBFG4E4EYi3gxSCjHcG4n1IimGKomHiMIXITgApWgfEEUB8BNmNIBORFa4G8vuA+DgQHwZiW5BibCYi+w9uCMkKPYHG7EALKg+Qb2HOApkI4oAEsQGQZpAhDAAlUBoCYPgJIAAAAABJRU5ErkJggg==" alt="">
+                            {% endif %}
                         {% endif %}
                     </td>
-                    <td></td>
+                    <td>
+                        {{ site.report_data.status_text }}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
